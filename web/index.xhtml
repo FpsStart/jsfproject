@@ -1,0 +1,185 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pe="http://primefaces.org/ui/extensions" >
+    <h:head>
+        <title>Facelet Title</title>
+
+        <script type="text/javascript" src="js/myFunction.js" />
+        <style>
+            .ui-panelgrid>*>tr,.ui-panelgrid .ui-panelgrid-cell {
+                border: none;
+            }
+            .ui-tooltip,.ui-tooltip-content.ui-widget-content{
+                color:white;
+                font-weight: bold;
+                background-color:#3399ff !important;
+            }
+            .ui-selectonemenu,.ui-selectonemenu-label{
+                width: 150px !important;
+            }
+            .text_lb, label,.ui-selectonemenu-items{
+                font-size: 14px !important;
+            }
+            .c1{
+                width: 150px;
+                text-align: right;
+            }
+            .c2{
+                width: 180px;
+            }
+            .c3{border:1px solid red;}
+            .ui-timepicker-minutes{display: none !important;}
+            #statusch{color:red !important;}
+
+        </style>
+    </h:head>
+    <h:body>
+        <h:form id="formDental">
+            <p:tabView>
+                <p:tab title="Registration">
+
+                    <p:panel style="margin:0 auto; width: 700px;position:relative;" id="panel_data">
+                        <p:messages id="messages" showDetail="false" autoUpdate="true" closable="true" />
+                        <p:outputLabel >
+                            <h1> Dentist Booking form</h1>
+                        </p:outputLabel>
+                        <p:commandButton value="New Book" update="panel_data" action="#{dentistForm.newBook()}" process="@this"/>
+                        <p:panelGrid columns="4" columnClasses="c1,c2,c3,c4">
+                            <p:outputLabel value="Choose a procedure:" class="text_lb" />
+                            <p:selectOneMenu id="procedure_id" value="#{dentistForm.patient.procedure}" required="true" requiredMessage="choose procedure">
+                                <f:selectItem itemLabel="Select" itemValue="#{null}"/>
+                                <f:selectItem itemLabel="Procedura 1" itemValue="Procedura 1"/>
+                                <f:selectItem itemLabel="Procedura 2" itemValue="Procedura 2"/>
+                                <f:selectItem itemLabel="Procedura 3" itemValue="Procedura 3"/>
+                                <f:selectItem itemLabel="Procedura 4" itemValue="Procedura 4"/>
+                                <p:ajax event="change"  update="@this,procedure_id,doc_id,fade" listener="#{dentistForm.initDoctor}"/>
+                            </p:selectOneMenu>
+                            <h:outputLink id="fade" value="#">
+                                <h:outputText value="?" />
+                                <pe:tooltip for="fade" value="#{dentistForm.procedureDesc}"  myPosition="bottom left"  atPosition="top right"/>  
+                            </h:outputLink>
+                            <p:message for="procedure_id"/>
+                            <p:outputLabel value="Choose a doctor:" class="text_lb"/>
+                            <p:selectOneMenu id="doc_id" value="#{dentistForm.patient.doctor}" required="true" requiredMessage="choose doctor"> 
+                                <f:selectItem itemLabel="Select" itemValue="#{null}"/>
+                                <f:selectItems value="#{dentistForm.listDoctor}" var="proced" itemLabel="#{proced}" itemValue="#{proced}"/>
+                                <p:ajax event="change" update="@this,dc_fd,timeDate,timedc" listener="#{dentistForm.initDescDoctor}"/>
+                            </p:selectOneMenu>
+                            <h:outputLink id="dc_fd" value="#">
+                                <h:outputText value="?" />
+                                <pe:tooltip for="dc_fd" value="#{dentistForm.docDesc}" 
+                                            myPosition="bottom left"  atPosition="top right"/>  
+                            </h:outputLink>
+                            <p:message for="procedure_id"/>
+                        </p:panelGrid>   
+                        <p:panelGrid columns="4" columnClasses="c1,c2,c3,c4" >
+                            <h:outputText value="Check doctor availability:" class="text_lb" />                           
+                            <p:calendar id="timeDate"  showOn="button" value="#{dentistForm.patient.date}" disabled="#{dentistForm.active}" >
+                                <p:ajax event="dateSelect" update="@this,submt,statusch" process="@this" listener="#{dentistForm.checkAvailable}"/>
+                            </p:calendar>
+                            <pe:timePicker id="timedc" value="#{dentistForm.patient.time}" mode="popup" 
+                                           onHourShow="onHourShowCallback" disabled="#{dentistForm.active}" >
+                                <p:ajax event="change"  update="@this,statusch,submt" process="@this" listener="#{dentistForm.checkAvailable}"/>
+                                <f:convertDateTime timeZone="Europe" pattern="HH:mm"/>
+                            </pe:timePicker>
+                            <p:outputLabel id="statusch" value="#{dentistForm.check}"/>
+                        </p:panelGrid>   
+                        <br/>
+                        <hr/>
+                        <br/>
+                        <p:panelGrid columns="3" columnClasses="c1,c2,c3">
+                            <p:outputLabel value="Your name, surname:" class="text_lb"/>
+
+                            <p:inputText id="nameID" maxlength="20" required="false"
+                                         requiredMessage="Your name is required"
+                                         value="#{dentistForm.patient.fullName}"/>
+                            <p:message for="nameID" />
+                            <p:outputLabel value="Your phone number:" class="text_lb"/>
+                            <p:inputMask  mask="+(373)-999-99999" value="#{dentistForm.patient.phoneNumber}"/>
+                            <p:outputLabel/>
+                            <p:outputLabel value="Your e-mail:" class="text_lb"/>
+                            <p:inputText value="#{dentistForm.patient.email}" id="email" requiredMessage="email is required" required="true" >
+
+                                <f:validator validatorId="emailValidator" />
+                            </p:inputText>
+                            <p:message for="email" />
+                        </p:panelGrid>
+                        <p:panelGrid columns="3" columnClasses="c1,c2,c3">
+                            <p:outputLabel/>
+                            <p:inputTextarea cols="40" rows="5" placeholder="Some comments here" value="#{dentistForm.patient.comment}"/> 
+                        </p:panelGrid>
+                        <p:commandButton value="Book Now!!" style="margin-left: 400px" action="#{dentistForm.booking}" id="submt" 
+                                         process="panel_data" update="panel_data,result" disabled="#{dentistForm.activebt}"/>
+                    </p:panel>
+                </p:tab>
+                <p:tab title="Admin">
+                    <p:dataTable value="#{dentistForm.listPatient}"  id="result"
+                                 rows="20" var="patient" sortMode="multiple"
+                                 widgetVar="patientWid"
+                                 paginator="true" rowIndexVar="status"
+                                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                 rowsPerPageTemplate="20,30,45">
+                        <f:facet name="header">
+                            Booking patients
+                        </f:facet>
+                        <p:column headerText="Nr">
+                            #{status+1}
+                        </p:column>
+                        <p:column headerText="Full name" sortBy="#{patient.fullName}" filterBy="#{patient.fullName}" filterMatchMode="contains">
+                            #{patient.fullName}
+                        </p:column>
+                        <p:column headerText="phone number" sortBy="#{patient.phoneNumber}">
+                            #{patient.phoneNumber}
+                        </p:column>
+                        <p:column  headerText="email">
+                            #{patient.email}
+                        </p:column>
+                        <p:column  headerText="Procedure" sortBy="#{patient.procedure}" filterBy="#{patient.procedure}" filterMatchMode="exact">
+                            <f:facet name="filter">
+                                <p:selectOneMenu onchange="PF('patientWid').filter()" >
+                                    <f:selectItem itemLabel="Select All" itemValue="#{null}" noSelectionOption="true" />
+                                    <f:selectItem itemLabel="Procedura 1" itemValue="Procedura 1"/>
+                                    <f:selectItem itemLabel="Procedura 2" itemValue="Procedura 2"/>
+                                    <f:selectItem itemLabel="Procedura 3" itemValue="Procedura 3"/>
+                                    <f:selectItem itemLabel="Procedura 4" itemValue="Procedura 4"/>
+                                </p:selectOneMenu>
+                            </f:facet>
+                            #{patient.procedure}
+                        </p:column>
+                        <p:column headerText="Doctor" sortBy="#{patient.doctor}" filterBy="#{patient.doctor}" filterMatchMode="exact">
+
+                            <f:facet name="filter">
+                                <p:selectOneMenu onchange="PF('patientWid').filter()" >
+                                    <f:selectItem itemLabel="Select All" itemValue="#{null}" noSelectionOption="true" />
+                                    <f:selectItem itemLabel="Doctor 1" itemValue="Doctor 1"/>
+                                    <f:selectItem itemLabel="Doctor 3" itemValue="Doctor 3"/>
+                                    <f:selectItem itemLabel="Doctor 5" itemValue="Doctor 4"/>
+                                    <f:selectItem itemLabel="Doctor 6" itemValue="Doctor 6"/>
+                                    <f:selectItem itemLabel="Doctor 8" itemValue="Doctor 8"/>
+                                    <f:selectItem itemLabel="Doctor 9" itemValue="Doctor 9"/>
+                                    <f:selectItem itemLabel="Doctor 10" itemValue="Doctor 10"/>
+                                </p:selectOneMenu>
+                            </f:facet>
+                            #{patient.doctor}
+                        </p:column>
+                        <p:column headerText="Date" sortBy="#{patient.date}">
+                            <p:outputLabel value="#{patient.date}">
+                                <f:convertDateTime pattern="dd/mm/yyyy"/>
+                            </p:outputLabel>
+                        </p:column>
+                        <p:column headerText="Hour" sortBy="#{patient.time}">
+                            <p:outputLabel value="#{patient.time}">
+                                <f:convertDateTime timeZone="Europe" pattern="HH:mm"/>
+                            </p:outputLabel>
+                        </p:column>
+                    </p:dataTable>
+                </p:tab>
+            </p:tabView>
+        </h:form>
+    </h:body>
+</html>
+
